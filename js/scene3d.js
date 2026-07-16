@@ -41,6 +41,8 @@ window.S3D = (() => {
     cineHeight: 0.4,
     cineAngle: 1.7,
     fissionT: 0,
+    bombBlend: 0, // 0 = cena do átomo · 1 = cena de Hiroshima
+    bombT: 0,     // linha do tempo da detonação (0→1)
   };
 
   // ---------- utilidades ----------
@@ -196,6 +198,154 @@ window.S3D = (() => {
   // ---------- direções da separação dos fragmentos ----------
   const splitDir = new THREE.Vector3(1, 0.22, -0.1).normalize();
 
+  // ============================================================
+  //  HIROSHIMA — cogumelo nuclear (tudo função pura de bombT)
+  // ============================================================
+  const GROUND_Y = -3.2;
+  const DET = 0.1; // instante da detonação em bombT
+  const boom = new THREE.Group();
+  boom.visible = false;
+  scene.add(boom);
+
+  // chão escuro para dar horizonte
+  const groundMat = new THREE.MeshBasicMaterial({ color: 0x0b120e, transparent: true, opacity: 0 });
+  const groundMesh = new THREE.Mesh(new THREE.CircleGeometry(70, 48), groundMat);
+  groundMesh.rotation.x = -Math.PI / 2;
+  groundMesh.position.y = GROUND_Y;
+  boom.add(groundMesh);
+
+  // clarão no marco zero
+  const boomFlash = makeGlowSprite(0xfff3cf, 1);
+  boomFlash.material.opacity = 0;
+  boomFlash.position.set(0, GROUND_Y + 1.2, 0);
+  boom.add(boomFlash);
+
+  // onda de choque rasteira
+  const shockMat = new THREE.MeshBasicMaterial({
+    color: 0xffd9a0, transparent: true, opacity: 0, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const shock = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 64), shockMat);
+  shock.rotation.x = -Math.PI / 2;
+  shock.position.y = GROUND_Y + 0.06;
+  boom.add(shock);
+
+  // nuvem de pontos genérica
+  function makeCloud(count, size, baseColor, additive) {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < count; i++) {
+      const v = 0.75 + Math.random() * 0.45; // variação de tom por ponto
+      c.set(baseColor).multiplyScalar(v);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({
+      size, map: softGlow, vertexColors: true, transparent: true, opacity: 0,
+      depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+    });
+    const cloud = new THREE.Points(geo, mat);
+    boom.add(cloud);
+    return cloud;
+  }
+
+  // sementes determinísticas por ponto
+  const FIRE_N = isMobile ? 90 : 150;
+  const fire = makeCloud(FIRE_N, 2.1, 0xffffff, true);
+  const fireSeed = [];
+  for (let i = 0; i < FIRE_N; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    fireSeed.push({
+      dx: Math.sin(ph) * Math.cos(th), dy: Math.sin(ph) * Math.sin(th), dz: Math.cos(ph),
+      r: 0.45 + Math.random() * 0.55, ph: Math.random() * Math.PI * 2,
+    });
+  }
+
+  const SMOKE_N = isMobile ? 180 : 300;
+  const smoke = makeCloud(SMOKE_N, 2.6, 0x4a423c, false);
+  const smokeSeed = [];
+  for (let i = 0; i < SMOKE_N; i++) {
+    const isCap = i > SMOKE_N * 0.34; // 1/3 tronco, 2/3 chapéu
+    smokeSeed.push({
+      isCap,
+      a: Math.random() * Math.PI * 2,       // ângulo em volta do eixo
+      v: Math.random() * Math.PI * 2,       // posição no "rolo" do chapéu
+      yf: Math.random(),                    // fração de altura no tronco
+      j: 0.6 + Math.random() * 0.8,         // jitter
+      ph: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function updateBoom(bt) {
+    const active = state.bombBlend > 0.004;
+    boom.visible = active;
+    if (!active) return;
+
+    groundMat.opacity = 0.9 * state.bombBlend;
+
+    const boomAppear = smooth(DET - 0.02, DET + 0.04, bt);
+    const riseY = GROUND_Y + 1.4 + smooth(DET, 0.9, bt) * 12.5; // centro da bola de fogo
+
+    // bola de fogo: esfera de pontos que sobe e incha; cor esfria com o tempo
+    const fireR = 0.4 + smooth(DET, 0.55, bt) * 3.1 + smooth(0.55, 1, bt) * 1.3;
+    const fpos = fire.geometry.attributes.position;
+    for (let i = 0; i < FIRE_N; i++) {
+      const s = fireSeed[i];
+      const wob = 1 + Math.sin(elapsed * 1.7 + s.ph) * 0.12;
+      fpos.setXYZ(i,
+        s.dx * fireR * s.r * wob,
+        riseY + s.dy * fireR * s.r * 0.85 * wob,
+        s.dz * fireR * s.r * wob);
+    }
+    fpos.needsUpdate = true;
+    const heat = 1 - smooth(0.45, 0.95, bt) * 0.75;
+    fire.material.color.setRGB(1, 0.45 + 0.55 * heat, 0.18 + 0.5 * heat * heat);
+    fire.material.opacity = boomAppear * (0.35 + 0.65 * heat);
+
+    // fumaça: tronco em coluna + chapéu em rolo toroidal
+    const spos = smoke.geometry.attributes.position;
+    const capR = 1.1 + smooth(0.32, 1, bt) * 4.6;   // raio do chapéu
+    const roll = smooth(0.32, 1, bt) * 2.4;          // rotação do rolo
+    const stemTop = riseY - 0.6;
+    for (let i = 0; i < SMOKE_N; i++) {
+      const s = smokeSeed[i];
+      if (s.isCap) {
+        const mr = (0.9 + 0.7 * Math.sin(s.ph)) * (0.5 + smooth(0.32, 1, bt));
+        const rr = capR + mr * Math.cos(s.v + roll);
+        spos.setXYZ(i,
+          rr * Math.cos(s.a) * s.j,
+          riseY + 0.5 + mr * Math.sin(s.v + roll) * 0.75,
+          rr * Math.sin(s.a) * s.j);
+      } else {
+        const y = GROUND_Y + 0.4 + s.yf * Math.max(stemTop - GROUND_Y, 0.5);
+        const taper = 0.8 + 1.3 * Math.pow(s.yf, 1.6); // coluna alarga no topo
+        const swirl = s.a + elapsed * 0.12 + s.yf * 2.2;
+        spos.setXYZ(i,
+          Math.cos(swirl) * taper * s.j * smooth(DET, 0.5, bt),
+          y,
+          Math.sin(swirl) * taper * s.j * smooth(DET, 0.5, bt));
+      }
+    }
+    spos.needsUpdate = true;
+    smoke.material.opacity = smooth(DET + 0.03, DET + 0.3, bt) * 0.92;
+    const glow2 = 0.35 * heat; // o fogo ilumina a fumaça por baixo no começo
+    smoke.material.color.setRGB(0.62 + glow2, 0.5 + glow2 * 0.6, 0.42 + glow2 * 0.25);
+
+    // onda de choque
+    const sw = smooth(DET, 0.62, bt) * 48 + 0.001;
+    shock.scale.set(sw, sw, 1);
+    shockMat.opacity = bt > DET ? 0.8 * (1 - smooth(0.3, 0.62, bt)) : 0;
+
+    // clarão no marco zero
+    const fl = Math.exp(-Math.pow((bt - DET) / 0.04, 2));
+    boomFlash.material.opacity = fl;
+    boomFlash.scale.setScalar(2 + fl * 34);
+  }
+
   // ---------- render loop ----------
   const clock = new THREE.Clock();
   let elapsed = 0;
@@ -226,17 +376,29 @@ window.S3D = (() => {
     const baseAngle = 0.55 * st.heroZoom + drift;
 
     const b = clamp01(st.cineBlend);
+    const bb = clamp01(st.bombBlend);
     // telas estreitas (celular em pé) precisam de câmera mais afastada
     const aspectComp = camera.aspect < 0.75 ? 1.55 : camera.aspect < 1.1 ? 1.28 : 1;
-    const radius = lerp(baseRadius, st.cineRadius, b) * aspectComp;
-    const height = lerp(baseHeight, st.cineHeight, b);
-    const angle = lerp(baseAngle, st.cineAngle, b);
+    let radius = lerp(baseRadius, st.cineRadius, b) * aspectComp;
+    let height = lerp(baseHeight, st.cineHeight, b);
+    let angle = lerp(baseAngle, st.cineAngle, b);
 
-    camera.position.set(radius * Math.sin(angle), height, radius * Math.cos(angle));
-    camera.lookAt(0, 0, 0);
+    // Hiroshima: plano aberto, câmera baixa olhando o horizonte
+    radius = lerp(radius, 30 * aspectComp, bb);
+    height = lerp(height, 1.6, bb);
+    angle = lerp(angle, 0.35 + drift * 0.3, bb);
+    const lookY = lerp(0, 4.6, bb);
+
+    // tremor de câmera na onda de choque
+    const shake = Math.exp(-Math.pow((st.bombT - DET - 0.03) / 0.07, 2)) * 0.55 * bb;
+    camera.position.set(
+      radius * Math.sin(angle) + Math.sin(elapsed * 53) * shake,
+      height + Math.cos(elapsed * 67) * shake * 0.7,
+      radius * Math.cos(angle));
+    camera.lookAt(0, lookY, 0);
 
     // opacidade global da cena (fica discreta atrás do texto)
-    const fade = clamp01(1 - 0.87 * st.calm + b);
+    const fade = clamp01(1 - 0.87 * st.calm + b + bb);
     canvas.style.opacity = fade.toFixed(3);
 
     // ----- átomo em repouso -----
@@ -308,6 +470,20 @@ window.S3D = (() => {
       pos.setY(i, y);
     }
     pos.needsUpdate = true;
+
+    // troca de cena: o átomo sai quando a bomba entra
+    // (por último, para vencer os blocos acima que também mexem em .visible)
+    if (bb >= 0.6) {
+      nucleus.visible = false;
+      orbits.visible = false;
+      projectile.visible = false;
+      flash.visible = false;
+      released.forEach((n) => { n.visible = false; });
+    } else {
+      nucleus.visible = true;
+      flash.visible = true;
+    }
+    updateBoom(st.bombT);
 
     renderer.render(scene, camera);
     requestAnimationFrame(render);

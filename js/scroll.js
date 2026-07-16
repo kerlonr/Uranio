@@ -72,24 +72,15 @@
   });
 
   // ---------- sequência de abertura do hero ----------
-  const title = document.querySelector('.hero-title');
-  if (title) {
-    const text = title.textContent.trim();
-    title.textContent = '';
-    [...text].forEach((chLetter) => {
-      const s = document.createElement('span');
-      s.className = 'ch';
-      s.textContent = chLetter;
-      title.appendChild(s);
-    });
-    gsap.timeline()
-      .from('.hero-eyebrow', { opacity: 0, y: 14, duration: 0.7, ease: 'power2.out' })
-      .from('.hero-title .ch', { yPercent: 115, duration: 0.85, stagger: 0.055, ease: 'power4.out' }, 0.15)
-      .from('.hero-sub', { opacity: 0, y: 18, duration: 0.7, ease: 'power2.out' }, 0.7)
-      .from('.atom', { opacity: 0, scale: 0.6, duration: 0.9, ease: 'back.out(1.6)' }, 0.85)
-      .from('.hero-stat', { opacity: 0, y: 22, stagger: 0.12, duration: 0.6, ease: 'power2.out' }, 1.05)
-      .from('.hero-hint', { opacity: 0, duration: 0.8 }, 1.4);
-  }
+  // o título sobe inteiro por trás da máscara (uma peça só: quebrar em
+  // letras com clip de gradiente renderiza bugado em vários navegadores)
+  gsap.timeline()
+    .from('.hero-eyebrow', { opacity: 0, y: 14, duration: 0.7, ease: 'power2.out' })
+    .from('.hero-title', { yPercent: 108, duration: 1.05, ease: 'power4.out' }, 0.15)
+    .from('.hero-sub', { opacity: 0, y: 18, duration: 0.7, ease: 'power2.out' }, 0.7)
+    .from('.atom', { opacity: 0, scale: 0.6, duration: 0.9, ease: 'back.out(1.6)' }, 0.85)
+    .from('.hero-stat', { opacity: 0, y: 22, stagger: 0.12, duration: 0.6, ease: 'power2.out' }, 1.05)
+    .from('.hero-hint', { opacity: 0, duration: 0.8 }, 1.4);
 
   // ---------- hero fixado: dissolve cinematográfico ao rolar ----------
   const s3d = window.S3D; // cena 3D (null sem WebGL / com motion reduzido)
@@ -103,7 +94,7 @@
       scrub: 0.6,
     },
   })
-    .to('.hero-title', { scale: 0.86, opacity: 0, filter: 'blur(6px)' }, 0)
+    .to('.hero-title', { scale: 0.88, opacity: 0 }, 0)
     .to('.hero-eyebrow, .hero-sub, .hero-hint', { opacity: 0, y: -26 }, 0)
     .to('.hero-stats', { opacity: 0, y: -40 }, 0.05)
     .to('.atom', { scale: 2.6, opacity: 0 }, 0)
@@ -163,7 +154,7 @@
       cineAngle: shots[0].angle,
     });
     cine.to(s3d.state, { cineBlend: 1, duration: 0.35, ease: 'power2.out' }, 0);
-    cine.to('.cinema-hud', { opacity: 1, duration: 0.3 }, 0.05);
+    cine.to('#cinema .cinema-hud', { opacity: 1, duration: 0.3 }, 0.05);
 
     // a fissão avança linearmente por toda a sequência
     cine.to(s3d.state, { fissionT: 1, duration: 3.35, ease: 'none' }, 0.3);
@@ -186,8 +177,54 @@
     });
 
     // saída: volta ao modo pano de fundo
-    cine.to('.cinema-hud', { opacity: 0, duration: 0.2 }, 3.75);
+    cine.to('#cinema .cinema-hud', { opacity: 0, duration: 0.2 }, 3.75);
     cine.to(s3d.state, { cineBlend: 0, duration: 0.3, ease: 'power2.in' }, 3.72);
+
+    // ---------- HIROSHIMA: a detonação dirigida pelo scroll ----------
+    const bombCaps = gsap.utils.toArray('#bombaCinema .cinema-caption');
+    let boomPlayed = false;
+    const bomb = gsap.timeline({
+      defaults: { ease: 'power2.inOut' },
+      scrollTrigger: {
+        trigger: '#bombaCinema',
+        start: 'top top',
+        end: '+=3000',
+        pin: true,
+        scrub: 0.5,
+        onUpdate(self) {
+          // estrondo ao cruzar a detonação (uma vez por passagem)
+          if (self.progress > 0.16 && !boomPlayed) {
+            boomPlayed = true;
+            if (window.SFX) SFX.play('boom');
+          } else if (self.progress < 0.08) {
+            boomPlayed = false;
+          }
+        },
+      },
+    });
+
+    bomb.to(s3d.state, { bombBlend: 1, duration: 0.3, ease: 'power2.out' }, 0);
+    bomb.to('#bombaCinema .cinema-hud', { opacity: 1, duration: 0.25 }, 0.05);
+
+    // a detonação avança linearmente (DET = 0.1 acontece cedo)
+    bomb.to(s3d.state, { bombT: 1, duration: 3.3, ease: 'none' }, 0.3);
+
+    // clarão branco na tela no instante da detonação (bombT ≈ 0.1 → t ≈ 0.63)
+    bomb.to('#nukeFlash', { opacity: 1, duration: 0.07, ease: 'power1.in' }, 0.56);
+    bomb.to('#nukeFlash', { opacity: 0, duration: 0.5, ease: 'power2.out' }, 0.64);
+
+    // legendas: três atos sobre a nuvem crescendo
+    bombCaps.forEach((cap, i) => {
+      const at = 1.0 + i * 0.95;
+      bomb.fromTo(cap,
+        { autoAlpha: 0, y: 34 },
+        { autoAlpha: 1, y: 0, duration: 0.28, ease: 'power3.out' }, at);
+      bomb.to(cap, { autoAlpha: 0, y: -22, duration: 0.2, ease: 'power2.in' }, at + 0.72);
+    });
+
+    // saída: fumaça fica ao fundo e a página segue para a conclusão
+    bomb.to('#bombaCinema .cinema-hud', { opacity: 0, duration: 0.2 }, 3.6);
+    bomb.to(s3d.state, { bombBlend: 0.22, duration: 0.4, ease: 'power2.in' }, 3.6);
   }
 
   // ---------- partículas ambiente no hero (fallback 2D, sem WebGL) ----------

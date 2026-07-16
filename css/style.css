@@ -173,6 +173,30 @@ body:not(.webgl-on) .cinema { display: none; }
 }
 .cinema-caption strong { color: var(--text); }
 
+/* ---------- seção Hiroshima ---------- */
+.nuke-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse 90% 80% at 50% 62%, #fffdf4 0%, #ffe9b8 45%, rgba(255, 233, 184, 0.6) 75%, transparent 100%);
+}
+.cinema-bomba::before,
+.cinema-bomba::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 12vh;
+  pointer-events: none;
+  z-index: 2;
+}
+.cinema-bomba::before { top: 0; background: linear-gradient(180deg, var(--bg), transparent); }
+.cinema-bomba::after { bottom: 0; background: linear-gradient(0deg, var(--bg), transparent); }
+.cinema-bomba .cinema-hud span:first-child,
+.cinema-bomba .cinema-hud span:last-child { color: var(--text-dim); }
+.webgl-on .bomba-fallback { display: none; }
+
 /* ============================================================
    BARRA DE PROGRESSO
    ============================================================ */
@@ -385,26 +409,20 @@ body:not(.webgl-on) .cinema { display: none; }
   margin-bottom: 1.2rem;
 }
 
+/* máscara: o título sobe inteiro por trás dela na abertura —
+   uma peça só, sem quebrar em letras (clip de gradiente + transform
+   por letra renderiza bugado em vários navegadores) */
+.hero-title-mask { overflow: hidden; padding-bottom: 0.08em; }
 .hero-title {
   font-size: clamp(3.8rem, 16vw, 10.5rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;
-  overflow: hidden;
-  background: linear-gradient(120deg, #fff 30%, var(--green) 100%);
+  background: linear-gradient(180deg, #fff 35%, var(--green) 118%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.4rem;
-}
-/* o gradiente precisa ficar em cada letra: spans com transform (GSAP)
-   viram camadas próprias e o clip do pai deixa de pintar nelas */
-.hero-title .ch {
-  display: inline-block;
-  background: linear-gradient(180deg, #fff 35%, var(--green) 115%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .hero-sub {

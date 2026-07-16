@@ -27,6 +27,10 @@ python3 -m http.server 8000
   texto e o momento principal: a **sequência cinematográfica da fissão**, com 4 cortes de
   câmera (CAM 01 → CAM 04), HUD de filmagem e legendas sincronizadas, tudo controlado
   pelo scroll (estilo página dos AirPods da Apple).
+- **Hiroshima, 1945**: no fim da página, uma sequência de detonação completa dirigida pelo
+  scroll — clarão, onda de choque, tremor de câmera, bola de fogo e o cogumelo se formando
+  em partículas — com legendas históricas (64 kg de urânio, 15 quilotons, <1 g de massa
+  convertida) que amarram no contraste com o reator controlado.
 - **Scroll suave com inércia** (Lenis) + **cenas guiadas pelo scroll** (GSAP ScrollTrigger):
   - hero fixado que se dissolve conforme você rola, com letras animadas na abertura;
   - linha do tempo **horizontal** (1789 → 2024) que anda conforme o scroll;

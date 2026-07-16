@@ -50,7 +50,11 @@
     <button data-target="curiosidades"><span class="mono">Curiosidades</span></button>
     <button data-target="videos"><span class="mono">Vídeos</span></button>
     <button data-target="quiz"><span class="mono">Quiz</span></button>
+    <button data-target="bomba"><span class="mono">1945</span></button>
   </nav>
+
+  <!-- clarão da detonação (seção Hiroshima) -->
+  <div class="nuke-flash" id="nukeFlash" aria-hidden="true"></div>
 
   <!-- ===================== HERO ===================== -->
   <header class="hero" id="topo">
@@ -58,7 +62,7 @@
     <canvas class="hero-particles" id="heroParticles" aria-hidden="true"></canvas>
     <div class="hero-content">
       <p class="hero-eyebrow mono">ELEMENTO 92 &nbsp;·&nbsp; [Rn] 5f³ 6d¹ 7s² &nbsp;·&nbsp; ACTINÍDEO</p>
-      <h1 class="hero-title" aria-label="Urânio">URÂNIO</h1>
+      <div class="hero-title-mask"><h1 class="hero-title">URÂNIO</h1></div>
       <p class="hero-sub">O elemento que alimenta a era da computação</p>
       <div class="atom" aria-hidden="true">
         <div class="atom-nucleus">92+</div>
@@ -637,10 +641,55 @@
     </div>
   </section>
 
+  <!-- ===================== 1945: HIROSHIMA ===================== -->
+  <section class="section" id="bomba">
+    <div class="container">
+      <p class="section-kicker mono">CAP. 12 — 1945, O LADO SOMBRIO</p>
+      <h2>O mesmo núcleo, sem controle</h2>
+      <p class="lead">Antes de ser combustível, o urânio foi arma. Em 6 de agosto de 1945, uma única
+      reação em cadeia <strong>sem barras de controle</strong> — exatamente a física que você viu acima —
+      destruiu a cidade de Hiroshima em segundos. Role e veja por que o controle importa.</p>
+      <div class="destaque-box bomba-fallback">
+        <strong>Hiroshima, 6 de agosto de 1945, 08:15.</strong> A bomba "Little Boy" levava ~64 kg de
+        urânio enriquecido — menos de 1 kg fissionou de fato, e menos de 1 grama de massa virou energia
+        (~15 mil toneladas de TNT). A mesma reação, controlada em um reator, ilumina milhões de casas.
+      </div>
+    </div>
+
+    <!-- sequência cinematográfica da detonação -->
+    <div class="cinema cinema-bomba" id="bombaCinema">
+      <div class="cinema-hud mono" aria-hidden="true">
+        <span>06 AGO 1945 · 08:15</span>
+        <span class="hud-rec"><span class="hud-rec-dot"></span>REC</span>
+        <span>HIROSHIMA, JAPÃO</span>
+      </div>
+      <div class="cinema-captions">
+        <div class="cinema-caption">
+          <span class="mono">LITTLE BOY</span>
+          <h3>64 kg de urânio</h3>
+          <p>A bomba lançada sobre Hiroshima levava ~64 kg de urânio enriquecido.
+          <strong>Menos de 1 kg</strong> chegou a fissionar.</p>
+        </div>
+        <div class="cinema-caption">
+          <span class="mono">≈ 15 QUILOTONS</span>
+          <h3>Menos de 1 grama de massa</h3>
+          <p>Toda a energia — equivalente a 15 mil toneladas de TNT — veio de <strong>menos de
+          1 grama</strong> de massa convertida em energia. E&nbsp;=&nbsp;mc², na sua forma mais brutal.</p>
+        </div>
+        <div class="cinema-caption">
+          <span class="mono">O CONTRASTE</span>
+          <h3>O mesmo núcleo, dois destinos</h3>
+          <p>Sem controle, a reação em cadeia devasta uma cidade. Com <strong>barras de controle</strong>,
+          ela ilumina milhões de casas. A diferença entre os dois é a engenharia.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== CONCLUSÃO ===================== -->
   <section class="section" id="conclusao">
     <div class="container narrow">
-      <p class="section-kicker mono">CAP. 12 — CONCLUSÃO</p>
+      <p class="section-kicker mono">CAP. 13 — CONCLUSÃO</p>
       <h2>Muito mais que "o elemento da bomba"</h2>
       <p>O urânio é um metal de propriedades extremas, cuja parte ativa — o núcleo do U-235 — concentra a
       maior densidade energética explorada comercialmente pela humanidade. Da mina de Caetité às pastilhas

@@ -72,6 +72,40 @@ window.SFX = (() => {
     osc.stop(t + dur + 0.02);
   }
 
+  // estrondo grave da detonação: subgrave + rajada de ruído filtrado
+  function boom() {
+    if (!enabled || !ctx) return;
+    const t = ctx.currentTime;
+    // subgrave descendente
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(70, t);
+    osc.frequency.exponentialRampToValueAtTime(26, t + 1.8);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0, t);
+    og.gain.linearRampToValueAtTime(0.55, t + 0.04);
+    og.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+    osc.connect(og).connect(master);
+    osc.start(t);
+    osc.stop(t + 2.5);
+    // rajada de ruído grave (o "rugido")
+    const len = Math.floor(ctx.sampleRate * 2);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(900, t);
+    lp.frequency.exponentialRampToValueAtTime(120, t + 1.6);
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.5, t);
+    ng.gain.exponentialRampToValueAtTime(0.001, t + 2);
+    src.connect(lp).connect(ng).connect(master);
+    src.start(t);
+  }
+
   const sounds = {
     ui:      () => tone(420, 0.06, 0.08),
     fission: () => { geigerTick(0.9); tone(190 + Math.random() * 60, 0.1, 0.06, 'sawtooth'); },
@@ -79,6 +113,7 @@ window.SFX = (() => {
     alpha:   () => { geigerTick(1); tone(140, 0.18, 0.12, 'sawtooth'); },
     good:    () => { tone(523, 0.1, 0.12); tone(784, 0.14, 0.12, 'triangle', 0.09); },
     bad:     () => { tone(300, 0.12, 0.12); tone(210, 0.18, 0.12, 'triangle', 0.1); },
+    boom,
   };
 
   let lastPlay = {};
