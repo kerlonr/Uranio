@@ -4,50 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Urânio (U) — O elemento que alimenta a era da computação</title>
-  <meta name="description" content="Site educativo interativo sobre o urânio: propriedades, fissão nuclear, aplicações, o urânio no Brasil e sua relação com a computação. Trabalho de Química — SETREM.">
+  <meta name="description" content="Experiência interativa sobre o urânio: propriedades, fissão nuclear, aplicações, o urânio no Brasil e sua relação com a computação. Trabalho de Química — SETREM.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☢️</text></svg>">
+  <link rel="stylesheet" href="fonts/fonts.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+  <!-- cena 3D global (Three.js) — fica atrás de todo o conteúdo -->
+  <canvas id="webgl" aria-hidden="true"></canvas>
+
+  <!-- barra de progresso de leitura -->
+  <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+
   <!-- ===================== NAVEGAÇÃO ===================== -->
   <nav class="nav" id="nav">
     <a href="#topo" class="nav-logo"><span class="nav-logo-symbol">U</span> Urânio<sup>92</sup></a>
-    <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">☰</button>
-    <div class="nav-links" id="navLinks">
-      <a href="#propriedades">Propriedades</a>
-      <a href="#fissao">Fissão</a>
-      <a href="#aplicacoes">Aplicações</a>
-      <a href="#computacao">Computação</a>
-      <a href="#brasil">Brasil</a>
-      <a href="#curiosidades">Curiosidades</a>
-      <a href="#quiz" class="nav-cta">Quiz</a>
+    <div class="nav-right">
+      <button class="sound-toggle mono" id="soundToggle" aria-pressed="false" title="Ativar som (contador Geiger)">
+        <span class="sound-dot" aria-hidden="true"></span><span id="soundLabel">SOM OFF</span>
+      </button>
+      <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">☰</button>
+      <div class="nav-links" id="navLinks">
+        <a href="#propriedades">Propriedades</a>
+        <a href="#fissao">Fissão</a>
+        <a href="#aplicacoes">Aplicações</a>
+        <a href="#computacao">Computação</a>
+        <a href="#brasil">Brasil</a>
+        <a href="#videos">Vídeos</a>
+        <a href="#quiz" class="nav-cta">Quiz</a>
+      </div>
     </div>
+  </nav>
+
+  <!-- navegação lateral por capítulos -->
+  <nav class="dots" id="dots" aria-label="Capítulos">
+    <button data-target="topo"><span class="mono">Início</span></button>
+    <button data-target="introducao"><span class="mono">Introdução</span></button>
+    <button data-target="historia"><span class="mono">Linha do tempo</span></button>
+    <button data-target="propriedades"><span class="mono">Propriedades</span></button>
+    <button data-target="fissao"><span class="mono">Fissão</span></button>
+    <button data-target="aplicacoes"><span class="mono">Aplicações</span></button>
+    <button data-target="computacao"><span class="mono">Computação</span></button>
+    <button data-target="brasil"><span class="mono">Brasil</span></button>
+    <button data-target="curiosidades"><span class="mono">Curiosidades</span></button>
+    <button data-target="videos"><span class="mono">Vídeos</span></button>
+    <button data-target="quiz"><span class="mono">Quiz</span></button>
   </nav>
 
   <!-- ===================== HERO ===================== -->
   <header class="hero" id="topo">
     <div class="hero-bg" aria-hidden="true"></div>
+    <canvas class="hero-particles" id="heroParticles" aria-hidden="true"></canvas>
     <div class="hero-content">
+      <p class="hero-eyebrow mono">ELEMENTO 92 &nbsp;·&nbsp; [Rn] 5f³ 6d¹ 7s² &nbsp;·&nbsp; ACTINÍDEO</p>
+      <h1 class="hero-title" aria-label="Urânio">URÂNIO</h1>
+      <p class="hero-sub">O elemento que alimenta a era da computação</p>
       <div class="atom" aria-hidden="true">
         <div class="atom-nucleus">92+</div>
         <div class="atom-orbit orbit-1"><div class="atom-electron"></div></div>
         <div class="atom-orbit orbit-2"><div class="atom-electron"></div></div>
         <div class="atom-orbit orbit-3"><div class="atom-electron"></div></div>
       </div>
-      <p class="hero-kicker">Elemento químico · número atômico 92</p>
-      <h1 class="hero-title">Urânio</h1>
-      <p class="hero-sub">O elemento que alimenta a era da computação</p>
       <div class="hero-stats">
-        <div class="hero-stat"><strong id="statEnergia">0</strong><span>MeV liberados por fissão</span></div>
-        <div class="hero-stat"><strong id="statDensidade">0</strong><span>g/cm³ de densidade</span></div>
-        <div class="hero-stat"><strong id="statReatores">0</strong><span>reatores em operação no mundo</span></div>
+        <div class="hero-stat"><strong id="statEnergia">0</strong><span class="mono">MeV por fissão</span></div>
+        <div class="hero-stat"><strong id="statDensidade">0</strong><span class="mono">g/cm³ de densidade</span></div>
+        <div class="hero-stat"><strong id="statReatores">0</strong><span class="mono">reatores no mundo</span></div>
       </div>
-      <a href="#introducao" class="hero-scroll" aria-label="Rolar para o conteúdo">
-        <span>explorar</span>
-        <div class="hero-scroll-arrow">↓</div>
-      </a>
     </div>
+    <div class="hero-hint mono" aria-hidden="true">role para explorar <span class="hero-hint-arrow">↓</span></div>
   </header>
 
   <main>
@@ -55,7 +80,7 @@
   <!-- ===================== INTRODUÇÃO ===================== -->
   <section class="section" id="introducao">
     <div class="container">
-      <p class="section-kicker">01 · Introdução</p>
+      <p class="section-kicker mono">CAP. 01 — INTRODUÇÃO</p>
       <h2>Um metal que mudou a história</h2>
       <div class="two-col">
         <div>
@@ -71,38 +96,58 @@
           os data centers que sustentam a internet, a nuvem e a inteligência artificial.</p>
         </div>
         <div class="element-tile" aria-label="Ficha do elemento urânio na tabela periódica">
-          <div class="element-tile-top">
+          <div class="element-tile-top mono">
             <span class="element-number">92</span>
             <span class="element-mass">238,03 u</span>
           </div>
           <div class="element-symbol">U</div>
           <div class="element-name">Urânio</div>
-          <div class="element-config">[Rn] 5f³ 6d¹ 7s²</div>
-          <div class="element-tag">Actinídeo · Bloco f · Período 7</div>
+          <div class="element-config mono">[Rn] 5f³ 6d¹ 7s²</div>
+          <div class="element-tag mono">ACTINÍDEO · BLOCO F · PERÍODO 7</div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="timeline" id="timeline">
-        <div class="timeline-item">
-          <div class="timeline-year">1789</div>
-          <p>Klaproth descobre o urânio em amostras de pechblenda e o nomeia em homenagem ao planeta Urano.</p>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-year">1896</div>
-          <p>Becquerel descobre a <strong>radioatividade</strong> estudando sais de urânio. Marie Curie cria o termo pouco depois.</p>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-year">1972</div>
-          <p>Cientistas encontram em <strong>Oklo (Gabão)</strong> um reator nuclear <em>natural</em> que operou há 2 bilhões de anos.</p>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-year">1978</div>
-          <p>Engenheiros da Intel descobrem que traços de urânio no encapsulamento de chips <strong>invertiam bits</strong> de memória.</p>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-year">2024+</div>
-          <p>Microsoft, Google, Amazon e Meta assinam contratos bilionários por <strong>energia nuclear</strong> para seus data centers de IA.</p>
-        </div>
+  <!-- statement -->
+  <section class="statement">
+    <p class="statement-text container">Reações químicas rearranjam elétrons. A fissão converte <em>massa</em> em energia — E&nbsp;=&nbsp;mc².</p>
+  </section>
+
+  <!-- ===================== LINHA DO TEMPO (horizontal) ===================== -->
+  <section class="section tl-section" id="historia">
+    <div class="container tl-head">
+      <p class="section-kicker mono">CAP. 02 — LINHA DO TEMPO</p>
+      <h2>De pigmento a combustível da IA</h2>
+      <p class="tl-instruction mono">continue rolando — a história anda na horizontal →</p>
+    </div>
+    <div class="tl-viewport">
+      <div class="tl-track" id="tlTrack">
+        <article class="tl-card">
+          <div class="tl-year mono">1789</div>
+          <h3>A descoberta</h3>
+          <p>Martin Heinrich Klaproth identifica o urânio em amostras de pechblenda e o batiza em homenagem ao planeta Urano. Pelos 107 anos seguintes, seria usado apenas como <strong>pigmento</strong> de vidros e cerâmicas.</p>
+        </article>
+        <article class="tl-card">
+          <div class="tl-year mono">1896</div>
+          <h3>A radioatividade</h3>
+          <p>Henri Becquerel descobre a <strong>radioatividade</strong> estudando sais de urânio. Na sequência, Marie Curie cria o termo e descobre o polônio e o rádio a partir do mesmo minério.</p>
+        </article>
+        <article class="tl-card">
+          <div class="tl-year mono">1972</div>
+          <h3>O reator natural</h3>
+          <p>Cientistas franceses descobrem que em <strong>Oklo, no Gabão</strong>, um depósito de urânio funcionou sozinho como reator nuclear — há 2 bilhões de anos, durante centenas de milhares de anos.</p>
+        </article>
+        <article class="tl-card">
+          <div class="tl-year mono">1978</div>
+          <h3>O ataque aos chips</h3>
+          <p>Engenheiros da Intel descobrem que traços de urânio no encapsulamento de memórias DRAM <strong>invertiam bits</strong> sozinhos. Nasce a era das memórias ECC e dos materiais ultrapuros.</p>
+        </article>
+        <article class="tl-card">
+          <div class="tl-year mono">2024+</div>
+          <h3>A era da IA</h3>
+          <p>Microsoft, Google, Amazon e Meta assinam contratos bilionários por <strong>energia nuclear</strong> dedicada aos seus data centers de inteligência artificial. O urânio vira infraestrutura digital.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -110,20 +155,20 @@
   <!-- ===================== PROPRIEDADES ===================== -->
   <section class="section section-alt" id="propriedades">
     <div class="container">
-      <p class="section-kicker">02 · Propriedades físico-químicas</p>
+      <p class="section-kicker mono">CAP. 03 — PROPRIEDADES FÍSICO-QUÍMICAS</p>
       <h2>Extremo em quase tudo</h2>
 
       <div class="props-grid">
-        <div class="prop-card"><span class="prop-value">19,05</span><span class="prop-unit">g/cm³</span><span class="prop-label">Densidade — uma das maiores da tabela periódica</span></div>
-        <div class="prop-card"><span class="prop-value">1.132</span><span class="prop-unit">°C</span><span class="prop-label">Ponto de fusão</span></div>
-        <div class="prop-card"><span class="prop-value">4.131</span><span class="prop-unit">°C</span><span class="prop-label">Ponto de ebulição</span></div>
-        <div class="prop-card"><span class="prop-value">α</span><span class="prop-unit">alfa</span><span class="prop-label">Emissor natural de partículas alfa</span></div>
-        <div class="prop-card"><span class="prop-value">Sólido</span><span class="prop-unit">a 25 °C</span><span class="prop-label">Metal branco-prateado e brilhante</span></div>
-        <div class="prop-card"><span class="prop-value">Alta</span><span class="prop-unit">reatividade</span><span class="prop-label">Oxida no ar, reage com água quente e ácidos</span></div>
+        <div class="prop-card"><span class="prop-value">19,05</span><span class="prop-unit mono">g/cm³</span><span class="prop-label">Densidade — uma das maiores da tabela periódica</span></div>
+        <div class="prop-card"><span class="prop-value">1.132</span><span class="prop-unit mono">°C</span><span class="prop-label">Ponto de fusão</span></div>
+        <div class="prop-card"><span class="prop-value">4.131</span><span class="prop-unit mono">°C</span><span class="prop-label">Ponto de ebulição</span></div>
+        <div class="prop-card"><span class="prop-value">α</span><span class="prop-unit mono">alfa</span><span class="prop-label">Emissor natural de partículas alfa</span></div>
+        <div class="prop-card"><span class="prop-value">Sólido</span><span class="prop-unit mono">a 25 °C</span><span class="prop-label">Metal branco-prateado e brilhante</span></div>
+        <div class="prop-card"><span class="prop-value">Alta</span><span class="prop-unit mono">reatividade</span><span class="prop-label">Oxida no ar, reage com água quente e ácidos</span></div>
       </div>
 
       <div class="density-demo card">
-        <h3>Sinta o peso <span class="badge-interativo">interativo</span></h3>
+        <h3>Sinta o peso <span class="badge-interativo mono">interativo</span></h3>
         <p>Um cubo de apenas <strong>10 cm de aresta</strong>. Clique em cada material e compare:</p>
         <div class="density-buttons" id="densityButtons">
           <button class="density-btn" data-material="agua">Água</button>
@@ -145,7 +190,7 @@
         <div class="isotope-card">
           <div class="isotope-name">U-238</div>
           <div class="isotope-bar"><div class="isotope-fill" style="--fill: 99.27%"></div></div>
-          <div class="isotope-abund">99,27% do urânio natural</div>
+          <div class="isotope-abund mono">99,27% do urânio natural</div>
           <ul>
             <li><strong>Meia-vida:</strong> 4,47 bilhões de anos</li>
             <li><strong>Papel:</strong> fértil — gera plutônio-239 em reatores</li>
@@ -154,7 +199,7 @@
         <div class="isotope-card isotope-star">
           <div class="isotope-name">U-235 ⭐</div>
           <div class="isotope-bar"><div class="isotope-fill" style="--fill: 0.72%"></div></div>
-          <div class="isotope-abund">apenas 0,72% do urânio natural</div>
+          <div class="isotope-abund mono">apenas 0,72% do urânio natural</div>
           <ul>
             <li><strong>Meia-vida:</strong> 704 milhões de anos</li>
             <li><strong>Papel:</strong> <strong>físsil</strong> — o "combustível" de fato</li>
@@ -163,7 +208,7 @@
         <div class="isotope-card">
           <div class="isotope-name">U-234</div>
           <div class="isotope-bar"><div class="isotope-fill" style="--fill: 0.005%"></div></div>
-          <div class="isotope-abund">0,005% — apenas traços</div>
+          <div class="isotope-abund mono">0,005% — apenas traços</div>
           <ul>
             <li><strong>Meia-vida:</strong> 245 mil anos</li>
             <li><strong>Papel:</strong> produto do decaimento do U-238</li>
@@ -196,24 +241,55 @@
   <!-- ===================== FISSÃO ===================== -->
   <section class="section" id="fissao">
     <div class="container">
-      <p class="section-kicker">03 · A parte ativa</p>
+      <p class="section-kicker mono">CAP. 04 — A PARTE ATIVA</p>
       <h2>A fissão nuclear</h2>
       <p class="lead">O urânio é um elemento, não uma molécula: sua "parte ativa" não está na eletrosfera,
-      e sim no <strong>núcleo do U-235</strong>. Parte da massa do núcleo é convertida diretamente em energia,
-      conforme <strong>E&nbsp;=&nbsp;mc²</strong>.</p>
+      e sim no <strong>núcleo do U-235</strong>. Continue rolando e acompanhe a fissão de perto,
+      câmera por câmera.</p>
+    </div>
 
-      <div class="fission-steps">
-        <div class="fission-step"><span class="step-num">1</span><p>Um nêutron lento ("térmico") é absorvido pelo núcleo do U-235</p></div>
-        <div class="fission-arrow">→</div>
-        <div class="fission-step"><span class="step-num">2</span><p>O núcleo fica instável e se parte em dois núcleos menores (ex.: bário e criptônio)</p></div>
-        <div class="fission-arrow">→</div>
-        <div class="fission-step"><span class="step-num">3</span><p>São liberados <strong>~200 MeV</strong> de energia e <strong>2 a 3 novos nêutrons</strong></p></div>
-        <div class="fission-arrow">→</div>
-        <div class="fission-step"><span class="step-num">4</span><p>Os novos nêutrons fissionam outros núcleos: <strong>reação em cadeia</strong></p></div>
+    <!-- sequência cinematográfica 3D: o scroll dirige a câmera -->
+    <div class="cinema" id="cinema">
+      <div class="cinema-hud mono" aria-hidden="true">
+        <span id="hudCam">CAM 01</span>
+        <span class="hud-rec"><span class="hud-rec-dot"></span>REC</span>
+        <span id="hudLabel">APROXIMAÇÃO</span>
+      </div>
+      <div class="cinema-captions">
+        <div class="cinema-caption">
+          <span class="mono">01 / 04</span>
+          <h3>O nêutron térmico</h3>
+          <p>Um nêutron lento se aproxima do núcleo de U-235 — lento o bastante para ser capturado.</p>
+        </div>
+        <div class="cinema-caption">
+          <span class="mono">02 / 04</span>
+          <h3>A captura</h3>
+          <p>O núcleo absorve o nêutron e se torna U-236: instável, deformado, prestes a romper.</p>
+        </div>
+        <div class="cinema-caption">
+          <span class="mono">03 / 04</span>
+          <h3>A ruptura</h3>
+          <p>O núcleo se parte em dois fragmentos — bário e criptônio — liberando <strong>~200&nbsp;MeV</strong>: parte da massa vira energia (E&nbsp;=&nbsp;mc²).</p>
+        </div>
+        <div class="cinema-caption">
+          <span class="mono">04 / 04</span>
+          <h3>A reação em cadeia</h3>
+          <p><strong>2 a 3 nêutrons</strong> escapam e atingem os núcleos vizinhos. A reação em cadeia começou.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="fission-steps" id="fissionSteps">
+        <div class="fission-step"><span class="step-num mono">1</span><p>Um nêutron lento ("térmico") é absorvido pelo núcleo do U-235</p></div>
+        <div class="fission-step"><span class="step-num mono">2</span><p>O núcleo fica instável e se parte em dois núcleos menores (ex.: bário e criptônio)</p></div>
+        <div class="fission-step"><span class="step-num mono">3</span><p>São liberados <strong>~200 MeV</strong> de energia e <strong>2 a 3 novos nêutrons</strong></p></div>
+        <div class="fission-step"><span class="step-num mono">4</span><p>Os novos nêutrons fissionam outros núcleos: <strong>reação em cadeia</strong></p></div>
+        <div class="fission-progress" aria-hidden="true"><div class="fission-progress-fill" id="fissionProgress"></div></div>
       </div>
 
       <div class="card sim-card">
-        <h3>Simulador de reação em cadeia <span class="badge-interativo">interativo</span></h3>
+        <h3>Simulador de reação em cadeia <span class="badge-interativo mono">interativo</span></h3>
         <p>Dispare um nêutron contra os núcleos de U-235 e veja a reação em cadeia.
         Depois, suba as <strong>barras de controle</strong> — elas absorvem nêutrons, exatamente
         como em um reator de verdade — e veja a reação se estabilizar ou morrer.</p>
@@ -222,19 +298,19 @@
           <button class="btn btn-primary" id="fireNeutron">☢ Disparar nêutron</button>
           <button class="btn" id="resetFission">Reiniciar</button>
           <label class="slider-label">
-            Barras de controle: <strong id="rodValue">0%</strong>
+            Barras de controle: <strong class="mono" id="rodValue">0%</strong>
             <input type="range" id="controlRods" min="0" max="100" value="0">
           </label>
         </div>
         <div class="sim-stats">
-          <div class="sim-stat"><strong id="fissionCount">0</strong><span>fissões</span></div>
-          <div class="sim-stat"><strong id="energyCount">0</strong><span>MeV liberados</span></div>
-          <div class="sim-stat"><strong id="neutronCount">0</strong><span>nêutrons livres</span></div>
+          <div class="sim-stat"><strong id="fissionCount">0</strong><span class="mono">fissões</span></div>
+          <div class="sim-stat"><strong id="energyCount">0</strong><span class="mono">MeV liberados</span></div>
+          <div class="sim-stat"><strong id="neutronCount">0</strong><span class="mono">nêutrons livres</span></div>
         </div>
       </div>
 
       <div class="card sim-card">
-        <h3>Simulador de meia-vida <span class="badge-interativo">interativo</span></h3>
+        <h3>Simulador de meia-vida <span class="badge-interativo mono">interativo</span></h3>
         <p>Cada quadrado é um átomo radioativo. A cada "meia-vida", cada átomo tem 50% de chance de decair
         — igual à dinâmica dos dados ou M&amp;M's da atividade em sala. Observe a curva exponencial se formar.</p>
         <div class="halflife-wrap">
@@ -246,7 +322,7 @@
         <div class="sim-controls">
           <button class="btn btn-primary" id="decayStep">⏳ Passar uma meia-vida</button>
           <button class="btn" id="resetDecay">Reiniciar</button>
-          <div class="sim-stat inline"><strong id="atomsLeft">128</strong><span>átomos restantes</span></div>
+          <div class="sim-stat inline"><strong id="atomsLeft">128</strong><span class="mono">átomos restantes</span></div>
         </div>
       </div>
 
@@ -257,39 +333,36 @@
         diferença de massa. O <strong>Brasil domina essa tecnologia</strong> — uma das poucas nações do mundo —
         na usina da INB em Resende (RJ), com centrífugas desenvolvidas pela Marinha do Brasil.</p>
         <div class="enrich-visual">
-          <div class="enrich-item"><div class="enrich-ring" style="--pct: 0.72"><span>0,72%</span></div><p>Urânio natural</p></div>
+          <div class="enrich-item"><div class="enrich-ring" style="--pct: 0.72"><span class="mono">0,72%</span></div><p>Urânio natural</p></div>
           <div class="enrich-arrow">→</div>
-          <div class="enrich-item"><div class="enrich-ring active" style="--pct: 4"><span>3–5%</span></div><p>Combustível de reator</p></div>
+          <div class="enrich-item"><div class="enrich-ring active" style="--pct: 4"><span class="mono">3–5%</span></div><p>Combustível de reator</p></div>
         </div>
       </div>
-
-      <div class="curiosidade-box">
-        <div class="curiosidade-icon">💡</div>
-        <p>Uma única pastilha de urânio enriquecido, do tamanho de uma borracha de lápis (~6 g), gera energia
-        equivalente a <strong>3 barris de petróleo</strong>, <strong>1 tonelada de carvão</strong> ou
-        <strong>1,5 tonelada de lenha</strong> (INB). É a maior densidade energética entre todos os
-        combustíveis comerciais.</p>
-      </div>
     </div>
+  </section>
+
+  <!-- statement -->
+  <section class="statement">
+    <p class="statement-text container">Uma pastilha de <em>6 gramas</em> guarda a energia de 3 barris de petróleo.</p>
   </section>
 
   <!-- ===================== APLICAÇÕES ===================== -->
   <section class="section section-alt" id="aplicacoes">
     <div class="container">
-      <p class="section-kicker">04 · Aplicações práticas</p>
+      <p class="section-kicker mono">CAP. 05 — APLICAÇÕES PRÁTICAS</p>
       <h2>Onde o urânio trabalha</h2>
 
       <div class="card sim-card">
-        <h3>Compare a energia de uma pastilha <span class="badge-interativo">interativo</span></h3>
+        <h3>Compare a energia de uma pastilha <span class="badge-interativo mono">interativo</span></h3>
         <p>Arraste para escolher a quantidade de pastilhas de UO₂ (~6 g cada) e veja o equivalente em outros combustíveis:</p>
         <label class="slider-label big">
           <input type="range" id="pelletSlider" min="1" max="50" value="1">
         </label>
         <div class="pellet-count"><strong id="pelletNum">1</strong> <span id="pelletWord">pastilha</span> de urânio enriquecido ≈</div>
         <div class="pellet-equivs">
-          <div class="equiv-card"><div class="equiv-icon">🛢️</div><strong id="eqOil">3</strong><span>barris de petróleo</span></div>
-          <div class="equiv-card"><div class="equiv-icon">⚫</div><strong id="eqCoal">1</strong><span>t de carvão mineral</span></div>
-          <div class="equiv-card"><div class="equiv-icon">🪵</div><strong id="eqWood">1,5</strong><span>t de lenha</span></div>
+          <div class="equiv-card"><div class="equiv-icon">🛢️</div><strong id="eqOil">3</strong><span class="mono">barris de petróleo</span></div>
+          <div class="equiv-card"><div class="equiv-icon">⚫</div><strong id="eqCoal">1</strong><span class="mono">t de carvão mineral</span></div>
+          <div class="equiv-card"><div class="equiv-icon">🪵</div><strong id="eqWood">1,5</strong><span class="mono">t de lenha</span></div>
         </div>
       </div>
 
@@ -303,25 +376,30 @@
         <div class="app-card"><div class="app-icon">🛡️</div><h4>Urânio empobrecido</h4><p>Blindagens, contrapesos de aeronaves e proteção radiológica em equipamentos médicos.</p></div>
       </div>
 
-      <h3 class="subsection-title">Do minério à tomada <span class="badge-interativo">clique nas etapas</span></h3>
+      <h3 class="subsection-title">Do minério à tomada <span class="badge-interativo mono">clique nas etapas</span></h3>
       <div class="cycle" id="cycle">
-        <button class="cycle-step active" data-info="A única mina ativa do Brasil fica em Caetité (BA), operada pela INB, com reservas de ~74 mil toneladas.">⛏️<span>Mineração</span></button>
-        <button class="cycle-step" data-info="O minério é processado até virar o concentrado 'yellowcake' (U₃O₈) — um pó amarelo, forma comercial do urânio.">🟡<span>Beneficiamento</span></button>
-        <button class="cycle-step" data-info="O yellowcake é convertido em hexafluoreto de urânio (UF₆), um gás que permite separar os isótopos.">💨<span>Conversão</span></button>
-        <button class="cycle-step" data-info="Ultracentrífugas elevam a proporção de U-235 de 0,72% para 3–5%. O Brasil domina essa etapa em Resende (RJ).">🌀<span>Enriquecimento</span></button>
-        <button class="cycle-step" data-info="O urânio enriquecido vira pó de UO₂ prensado em pequenas pastilhas cerâmicas, empilhadas em varetas de combustível.">🧱<span>Fabricação</span></button>
-        <button class="cycle-step" data-info="No reator, a fissão em cadeia controlada gera calor contínuo por anos com poucas toneladas de combustível.">☢️<span>Reator</span></button>
-        <button class="cycle-step" data-info="O calor ferve água; o vapor gira uma turbina acoplada a um gerador — mesma etapa final de uma termelétrica.">🌫️<span>Turbina</span></button>
-        <button class="cycle-step" data-info="A eletricidade cai na rede e chega às casas, indústrias — e aos data centers que sustentam a internet.">🔌<span>Energia</span></button>
+        <button class="cycle-step active" data-info="A única mina ativa do Brasil fica em Caetité (BA), operada pela INB, com reservas de ~74 mil toneladas.">⛏️<span class="mono">Mineração</span></button>
+        <button class="cycle-step" data-info="O minério é processado até virar o concentrado 'yellowcake' (U₃O₈) — um pó amarelo, forma comercial do urânio.">🟡<span class="mono">Beneficiamento</span></button>
+        <button class="cycle-step" data-info="O yellowcake é convertido em hexafluoreto de urânio (UF₆), um gás que permite separar os isótopos.">💨<span class="mono">Conversão</span></button>
+        <button class="cycle-step" data-info="Ultracentrífugas elevam a proporção de U-235 de 0,72% para 3–5%. O Brasil domina essa etapa em Resende (RJ).">🌀<span class="mono">Enriquecimento</span></button>
+        <button class="cycle-step" data-info="O urânio enriquecido vira pó de UO₂ prensado em pequenas pastilhas cerâmicas, empilhadas em varetas de combustível.">🧱<span class="mono">Fabricação</span></button>
+        <button class="cycle-step" data-info="No reator, a fissão em cadeia controlada gera calor contínuo por anos com poucas toneladas de combustível.">☢️<span class="mono">Reator</span></button>
+        <button class="cycle-step" data-info="O calor ferve água; o vapor gira uma turbina acoplada a um gerador — mesma etapa final de uma termelétrica.">🌫️<span class="mono">Turbina</span></button>
+        <button class="cycle-step" data-info="A eletricidade cai na rede e chega às casas, indústrias — e aos data centers que sustentam a internet.">🔌<span class="mono">Energia</span></button>
       </div>
       <div class="cycle-info card" id="cycleInfo">A única mina ativa do Brasil fica em Caetité (BA), operada pela INB, com reservas de ~74 mil toneladas.</div>
     </div>
   </section>
 
+  <!-- statement -->
+  <section class="statement">
+    <p class="statement-text container">A inteligência artificial tem fome de energia. As big techs foram buscar no <em>núcleo do átomo</em>.</p>
+  </section>
+
   <!-- ===================== COMPUTAÇÃO ===================== -->
   <section class="section" id="computacao">
     <div class="container">
-      <p class="section-kicker">05 · Urânio × Engenharia da Computação</p>
+      <p class="section-kicker mono">CAP. 06 — URÂNIO × ENGENHARIA DA COMPUTAÇÃO</p>
       <h2>O elemento por trás da nuvem</h2>
       <p class="lead">Treinar e executar modelos de IA exige dezenas de milhares de processadores funcionando
       24/7. Um único data center de grande porte consome tanta energia quanto uma cidade média — e a energia
@@ -331,22 +409,22 @@
       <div class="bigtech-grid">
         <div class="bigtech-card">
           <div class="bigtech-name">Microsoft</div>
-          <div class="bigtech-deal">US$ 16 bi · 20 anos</div>
+          <div class="bigtech-deal mono">US$ 16 bi · 20 anos</div>
           <p>Reativação da usina de <strong>Three Mile Island</strong> (835 MW), exclusivamente para seus data centers de IA. Operação plena prevista para 2027.</p>
         </div>
         <div class="bigtech-card">
           <div class="bigtech-name">Google</div>
-          <div class="bigtech-deal">500 MW em SMRs</div>
+          <div class="bigtech-deal mono">500 MW em SMRs</div>
           <p>Pequenos reatores modulares da <strong>Kairos Power</strong>; primeiro reator previsto para 2030.</p>
         </div>
         <div class="bigtech-card">
           <div class="bigtech-name">Amazon</div>
-          <div class="bigtech-deal">US$ 700 mi + US$ 20 bi</div>
+          <div class="bigtech-deal mono">US$ 700 mi + US$ 20 bi</div>
           <p>Investimento na <strong>X-energy</strong> (até 12 reatores SMR Xe-100) e campus de IA junto à usina nuclear de Susquehanna.</p>
         </div>
         <div class="bigtech-card">
           <div class="bigtech-name">Meta</div>
-          <div class="bigtech-deal">até 6,6 GW</div>
+          <div class="bigtech-deal mono">até 6,6 GW</div>
           <p>Contratos com <strong>TerraPower, Oklo, Vistra e Constellation</strong> — a maior aposta nuclear entre as big techs.</p>
         </div>
       </div>
@@ -355,7 +433,7 @@
 
       <div class="intel-story">
         <div class="intel-header">
-          <span class="intel-year">1978</span>
+          <span class="intel-year mono">1978</span>
           <h3>Quando o urânio atacou os chips</h3>
         </div>
         <div class="intel-grid">
@@ -380,7 +458,7 @@
           </div>
         </div>
         <div class="bitflip-demo card" id="bitflipDemo">
-          <h4>Veja um soft error acontecer <span class="badge-interativo">interativo</span></h4>
+          <h4>Veja um soft error acontecer <span class="badge-interativo mono">interativo</span></h4>
           <p>Esta é uma "memória" de 8 bits. Clique no botão para disparar uma partícula alfa:</p>
           <div class="bits" id="bitsRow"></div>
           <div class="sim-controls">
@@ -403,7 +481,7 @@
   <!-- ===================== BRASIL ===================== -->
   <section class="section section-alt" id="brasil">
     <div class="container">
-      <p class="section-kicker">06 · O urânio no Brasil</p>
+      <p class="section-kicker mono">CAP. 07 — O URÂNIO NO BRASIL</p>
       <h2>Potência silenciosa</h2>
       <div class="brasil-stats">
         <div class="brasil-stat"><strong data-count="250">0</strong><span>mil toneladas de reservas conhecidas — com só ⅓ do território prospectado</span></div>
@@ -426,7 +504,7 @@
   <!-- ===================== VANTAGENS × DESVANTAGENS ===================== -->
   <section class="section" id="balanco">
     <div class="container">
-      <p class="section-kicker">07 · Balanço</p>
+      <p class="section-kicker mono">CAP. 08 — BALANÇO</p>
       <h2>Vantagens × Desvantagens</h2>
       <div class="pros-cons">
         <div class="pros">
@@ -456,42 +534,42 @@
   <!-- ===================== CURIOSIDADES ===================== -->
   <section class="section section-alt" id="curiosidades">
     <div class="container">
-      <p class="section-kicker">08 · Curiosidades</p>
-      <h2>Você sabia? <span class="badge-interativo">clique nos cartões</span></h2>
+      <p class="section-kicker mono">CAP. 09 — CURIOSIDADES</p>
+      <h2>Você sabia? <span class="badge-interativo mono">clique nos cartões</span></h2>
       <div class="flip-grid">
         <button class="flip-card" aria-label="Curiosidade: reator natural de Oklo">
           <div class="flip-inner">
-            <div class="flip-front"><div class="flip-icon">🌋</div><h4>O reator nuclear natural de 2 bilhões de anos</h4><span class="flip-hint">clique para virar</span></div>
+            <div class="flip-front"><div class="flip-icon">🌋</div><h4>O reator nuclear natural de 2 bilhões de anos</h4><span class="flip-hint mono">clique para virar</span></div>
             <div class="flip-back"><p>Em Oklo (Gabão), há 2 bilhões de anos, água subterrânea agiu como moderador e o depósito de urânio <strong>funcionou sozinho como reator</strong> por centenas de milhares de anos — 16 zonas de reação! Uma startup nuclear contratada pela Meta se chama "Oklo" em homenagem.</p></div>
           </div>
         </button>
         <button class="flip-card" aria-label="Curiosidade: vidro de urânio">
           <div class="flip-inner">
-            <div class="flip-front"><div class="flip-icon">🥃</div><h4>Vidro de urânio fluorescente</h4><span class="flip-hint">clique para virar</span></div>
+            <div class="flip-front"><div class="flip-icon">🥃</div><h4>Vidro de urânio fluorescente</h4><span class="flip-hint mono">clique para virar</span></div>
             <div class="flip-back"><p>Nos séculos XIX e XX, sais de urânio davam ao vidro uma cor verde-amarelada. Sob luz ultravioleta, ele <strong>brilha em verde intenso</strong>. Peças antigas são item de colecionador — e sua radioatividade é tão baixa que são consideradas seguras.</p></div>
           </div>
         </button>
         <button class="flip-card" aria-label="Curiosidade: pigmento antes da radioatividade">
           <div class="flip-inner">
-            <div class="flip-front"><div class="flip-icon">🎨</div><h4>107 anos como simples pigmento</h4><span class="flip-hint">clique para virar</span></div>
+            <div class="flip-front"><div class="flip-icon">🎨</div><h4>107 anos como simples pigmento</h4><span class="flip-hint mono">clique para virar</span></div>
             <div class="flip-back"><p>O urânio foi descoberto <strong>107 anos antes</strong> da radioatividade: entre 1789 e 1896 era usado apenas como pigmento. Foi estudando o urânio que Marie Curie criou o termo "radioatividade" e descobriu o polônio e o rádio.</p></div>
           </div>
         </button>
         <button class="flip-card" aria-label="Curiosidade: calor interno da Terra">
           <div class="flip-inner">
-            <div class="flip-front"><div class="flip-icon">🌍</div><h4>O urânio move os continentes</h4><span class="flip-hint">clique para virar</span></div>
+            <div class="flip-front"><div class="flip-icon">🌍</div><h4>O urânio move os continentes</h4><span class="flip-hint mono">clique para virar</span></div>
             <div class="flip-back"><p>O calor do decaimento do urânio e do tório no interior da Terra é parte do que <strong>mantém o núcleo do planeta quente</strong> e move as placas tectônicas. Sem ele, a geologia do planeta seria outra.</p></div>
           </div>
         </button>
         <button class="flip-card" aria-label="Curiosidade: equivalência com carvão">
           <div class="flip-inner">
-            <div class="flip-front"><div class="flip-icon">⚖️</div><h4>1 kg = 2.700 toneladas</h4><span class="flip-hint">clique para virar</span></div>
+            <div class="flip-front"><div class="flip-icon">⚖️</div><h4>1 kg = 2.700 toneladas</h4><span class="flip-hint mono">clique para virar</span></div>
             <div class="flip-back"><p>1 kg de U-235 totalmente fissionado libera energia equivalente à queima de cerca de <strong>2.700 toneladas de carvão</strong>. É a maior densidade energética explorada comercialmente pela humanidade.</p></div>
           </div>
         </button>
         <button class="flip-card" aria-label="Curiosidade: datação da Terra">
           <div class="flip-inner">
-            <div class="flip-front"><div class="flip-icon">⏳</div><h4>O relógio do planeta</h4><span class="flip-hint">clique para virar</span></div>
+            <div class="flip-front"><div class="flip-icon">⏳</div><h4>O relógio do planeta</h4><span class="flip-hint mono">clique para virar</span></div>
             <div class="flip-back"><p>Como a meia-vida do U-238 é quase igual à idade da Terra, a <strong>datação urânio–chumbo</strong> é uma das ferramentas mais precisas para medir a idade de rochas com bilhões de anos — e do próprio planeta (4,54 bilhões de anos).</p></div>
           </div>
         </button>
@@ -499,15 +577,52 @@
     </div>
   </section>
 
-  <!-- ===================== QUIZ ===================== -->
-  <section class="section" id="quiz">
+  <!-- ===================== VÍDEOS ===================== -->
+  <section class="section" id="videos">
     <div class="container">
-      <p class="section-kicker">09 · Teste seus conhecimentos</p>
+      <p class="section-kicker mono">CAP. 10 — PARA ASSISTIR</p>
+      <h2>Aprofunde em vídeo</h2>
+      <p class="lead">Três vídeos em português que complementam este trabalho — do passeio dentro de Angra
+      ao ciclo do combustível contado pela própria INB. Clique para assistir aqui mesmo
+      <span class="mono">(requer internet)</span>.</p>
+      <div class="videos-grid">
+        <article class="video-card" data-id="ZsR-2zkEwCM">
+          <button class="video-thumb" aria-label="Reproduzir: Entramos na usina nuclear de Angra">
+            <img src="https://i.ytimg.com/vi/ZsR-2zkEwCM/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">
+            <span class="video-play" aria-hidden="true">▶</span>
+          </button>
+          <h4>Entramos na usina nuclear de Angra! #Boravê</h4>
+          <p class="video-meta mono">Manual do Mundo — por dentro do reator de Angra</p>
+        </article>
+        <article class="video-card" data-id="eWV1JVrR_oU">
+          <button class="video-thumb" aria-label="Reproduzir: Ciclo do combustível nuclear">
+            <img src="https://i.ytimg.com/vi/eWV1JVrR_oU/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">
+            <span class="video-play" aria-hidden="true">▶</span>
+          </button>
+          <h4>Ligado na Energia: ciclo do combustível nuclear</h4>
+          <p class="video-meta mono">INB — da mina à pastilha, pela própria estatal</p>
+        </article>
+        <article class="video-card" data-id="wtn_JIouN5Q">
+          <button class="video-thumb" aria-label="Reproduzir: O problema da energia nuclear">
+            <img src="https://i.ytimg.com/vi/wtn_JIouN5Q/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">
+            <span class="video-play" aria-hidden="true">▶</span>
+          </button>
+          <h4>O problema da energia nuclear</h4>
+          <p class="video-meta mono">Ciência Todo Dia — por que a fonte mais densa ainda assusta</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== QUIZ ===================== -->
+  <section class="section section-alt" id="quiz">
+    <div class="container">
+      <p class="section-kicker mono">CAP. 11 — TESTE SEUS CONHECIMENTOS</p>
       <h2>Quiz do Urânio</h2>
       <div class="card quiz-card" id="quizCard">
         <div class="quiz-progress"><div class="quiz-progress-fill" id="quizProgress"></div></div>
         <div id="quizBody">
-          <p class="quiz-count" id="quizCount"></p>
+          <p class="quiz-count mono" id="quizCount"></p>
           <h3 class="quiz-question" id="quizQuestion"></h3>
           <div class="quiz-options" id="quizOptions"></div>
           <p class="quiz-feedback" id="quizFeedback"></p>
@@ -523,9 +638,9 @@
   </section>
 
   <!-- ===================== CONCLUSÃO ===================== -->
-  <section class="section section-alt" id="conclusao">
+  <section class="section" id="conclusao">
     <div class="container narrow">
-      <p class="section-kicker">10 · Conclusão</p>
+      <p class="section-kicker mono">CAP. 12 — CONCLUSÃO</p>
       <h2>Muito mais que "o elemento da bomba"</h2>
       <p>O urânio é um metal de propriedades extremas, cuja parte ativa — o núcleo do U-235 — concentra a
       maior densidade energética explorada comercialmente pela humanidade. Da mina de Caetité às pastilhas
@@ -563,10 +678,17 @@
           </ul>
         </div>
       </div>
-      <p class="footer-note">Site educativo · Três de Maio – RS · 2026</p>
+      <p class="footer-note mono">SITE EDUCATIVO · TRÊS DE MAIO – RS · 2026</p>
     </div>
   </footer>
 
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/vendor/lenis.min.js"></script>
+  <script src="js/vendor/three.min.js"></script>
+  <script src="js/sound.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/scene3d.js"></script>
+  <script src="js/scroll.js"></script>
 </body>
 </html>

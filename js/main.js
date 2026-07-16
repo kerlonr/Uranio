@@ -17,26 +17,6 @@ navLinks.addEventListener('click', (e) => {
   if (e.target.tagName === 'A') navLinks.classList.remove('open');
 });
 
-// ---------- Animação de entrada (reveal on scroll) ----------
-const revealTargets = document.querySelectorAll(
-  '.section h2, .section-kicker, .lead, .prop-card, .isotope-card, .app-card, ' +
-  '.bigtech-card, .brasil-stat, .flip-card, .timeline-item, .fission-step, ' +
-  '.card, .curiosidade-box, .destaque-box, .element-tile, .pros, .cons, .intel-story'
-);
-revealTargets.forEach((el, i) => {
-  el.classList.add('reveal');
-  el.style.transitionDelay = `${(i % 6) * 60}ms`;
-});
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      revealObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.12 });
-revealTargets.forEach((el) => revealObserver.observe(el));
-
 // ---------- Contadores animados ----------
 function animateCount(el, target, decimals = 0, duration = 1600) {
   const start = performance.now();
@@ -225,6 +205,7 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
           nu.alive = false;
           fissions++;
           energy += 200;
+          if (window.SFX) SFX.play('fission');
           flashes.push({ x: nu.x, y: nu.y, r: 4, max: 34, color: '63,220,140' });
           // fragmentos (Ba / Kr)
           const fa = Math.random() * Math.PI * 2;
@@ -376,6 +357,7 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
   }
 
   function decayStep() {
+    if (window.SFX) SFX.play('tick');
     let alive = 0;
     atoms.forEach((a) => {
       if (!a.alive) return;
@@ -522,11 +504,13 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
   }
 
   document.getElementById('alphaBtn').addEventListener('click', () => {
+    if (window.SFX) SFX.play('alpha');
     const i = Math.floor(Math.random() * 8);
     bits[i] = bits[i] === 0 ? 1 : 0;
     render();
   });
   document.getElementById('eccBtn').addEventListener('click', () => {
+    if (window.SFX) SFX.play('good');
     bits = [...original];
     render();
     msg.innerHTML = '🛡️ A memória <strong>ECC</strong> detectou e corrigiu o erro automaticamente — exatamente o que os servidores fazem desde o caso Intel.';
@@ -539,6 +523,21 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
 // ---------- Flip cards ----------
 document.querySelectorAll('.flip-card').forEach((card) => {
   card.addEventListener('click', () => card.classList.toggle('flipped'));
+});
+
+// ---------- Vídeos (lite embed: iframe só carrega ao clicar) ----------
+document.querySelectorAll('.video-card').forEach((card) => {
+  const thumb = card.querySelector('.video-thumb');
+  if (!thumb) return;
+  thumb.addEventListener('click', () => {
+    const id = card.dataset.id;
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+    iframe.title = card.querySelector('h4')?.textContent || 'Vídeo do YouTube';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    iframe.allowFullscreen = true;
+    thumb.replaceWith(iframe);
+  });
 });
 
 // ============================================================
@@ -651,9 +650,11 @@ document.querySelectorAll('.flip-card').forEach((card) => {
     buttons[q.answer].classList.add('correct');
     if (i === q.answer) {
       score++;
+      if (window.SFX) SFX.play('good');
       feedbackEl.innerHTML = `✅ <strong>Correto!</strong> ${q.why}`;
     } else {
       btn.classList.add('wrong');
+      if (window.SFX) SFX.play('bad');
       feedbackEl.innerHTML = `❌ <strong>Não foi dessa vez.</strong> ${q.why}`;
     }
     nextBtn.hidden = false;
