@@ -315,19 +315,63 @@
 
       <div class="card sim-card">
         <h3>Simulador de meia-vida <span class="badge-interativo mono">interativo</span></h3>
-        <p>Cada quadrado é um átomo radioativo. A cada "meia-vida", cada átomo tem 50% de chance de decair
-        — igual à dinâmica dos dados ou M&amp;M's da atividade em sala. Observe a curva exponencial se formar.</p>
+        <p>A cada meia-vida, <strong>50% da massa restante decai</strong>. Escolha um isótopo real (ou
+        configure o seu), defina a massa inicial e avance no tempo — os valores são calculados de verdade:
+        massa restante = m₀ ÷ 2ⁿ.</p>
+
+        <div class="hl-controls">
+          <label class="hl-field">
+            <span class="mono">Isótopo</span>
+            <select id="hlPreset">
+              <option value="u238" selected>Urânio-238</option>
+              <option value="u235">Urânio-235</option>
+              <option value="c14">Carbono-14</option>
+              <option value="i131">Iodo-131</option>
+              <option value="tc99m">Tecnécio-99m</option>
+              <option value="custom">Personalizado…</option>
+            </select>
+          </label>
+          <label class="hl-field">
+            <span class="mono">Massa inicial (g)</span>
+            <input type="number" id="hlMass" value="100" min="0.000001" step="any">
+          </label>
+          <label class="hl-field">
+            <span class="mono">Meia-vida</span>
+            <span class="hl-time">
+              <input type="number" id="hlTime" value="4.47" min="0.000001" step="any">
+              <select id="hlUnit">
+                <option value="s">segundos</option>
+                <option value="min">minutos</option>
+                <option value="h">horas</option>
+                <option value="d">dias</option>
+                <option value="a">anos</option>
+                <option value="Ma">milhões de anos</option>
+                <option value="Ga" selected>bilhões de anos</option>
+              </select>
+            </span>
+          </label>
+        </div>
+
+        <div class="hl-readout">
+          <div class="hl-stat"><strong id="hlSteps">0</strong><span class="mono">meias-vidas</span></div>
+          <div class="hl-stat"><strong id="hlElapsed">0</strong><span class="mono">tempo decorrido</span></div>
+          <div class="hl-stat"><strong id="hlLeft">100 g</strong><span class="mono">massa restante</span></div>
+          <div class="hl-stat"><strong id="hlPct">100%</strong><span class="mono">da massa original</span></div>
+        </div>
+
         <div class="halflife-wrap">
           <div class="atoms-grid" id="atomsGrid" aria-label="Grade de átomos radioativos"></div>
           <div class="halflife-chart-wrap">
-            <canvas id="halflifeChart" width="420" height="260" aria-label="Gráfico de decaimento exponencial"></canvas>
+            <canvas id="halflifeChart" width="420" height="260" aria-label="Gráfico de decaimento da massa"></canvas>
           </div>
         </div>
         <div class="sim-controls">
           <button class="btn btn-primary" id="decayStep">⏳ Passar uma meia-vida</button>
           <button class="btn" id="resetDecay">Reiniciar</button>
-          <div class="sim-stat inline"><strong id="atomsLeft">128</strong><span class="mono">átomos restantes</span></div>
         </div>
+        <p class="note">Cada quadradinho representa 1/128 da massa. Na natureza, cada átomo tem 50% de
+        <em>chance</em> de decair a cada meia-vida — como são trilhões de átomos, o total converge para
+        exatamente a metade. É também assim que a datação por carbono-14 calcula a idade de fósseis.</p>
       </div>
 
       <h3 class="subsection-title">Enriquecimento</h3>
@@ -463,13 +507,53 @@
         </div>
         <div class="bitflip-demo card" id="bitflipDemo">
           <h4>Veja um soft error acontecer <span class="badge-interativo mono">interativo</span></h4>
-          <p>Esta é uma "memória" de 8 bits. Clique no botão para disparar uma partícula alfa:</p>
-          <div class="bits" id="bitsRow"></div>
-          <div class="sim-controls">
-            <button class="btn btn-primary" id="alphaBtn">α Disparar partícula alfa</button>
-            <button class="btn" id="eccBtn">🛡️ Corrigir com ECC</button>
+          <p>Esta memória de 8 bits guarda o <strong>saldo de uma conta bancária</strong>. Cada bit tem um
+          "peso" (128, 64, 32… até 1) e a soma dos bits ligados dá o valor. Dispare uma partícula alfa —
+          ou clique no computador — e veja o que <em>um único bit</em> pode causar:</p>
+
+          <div class="bitflip-wrap">
+            <div class="bitflip-left">
+              <div class="bits" id="bitsRow"></div>
+              <div class="bit-weights mono" id="bitWeights" aria-hidden="true"></div>
+              <div class="sim-controls">
+                <button class="btn btn-primary" id="alphaBtn">α Disparar partícula alfa</button>
+                <button class="btn" id="eccBtn">🛡️ Corrigir com ECC</button>
+              </div>
+              <p class="bitflip-msg" id="bitflipMsg">Memória íntegra. Byte armazenado: <strong id="byteValue"></strong></p>
+            </div>
+
+            <button class="pc" id="pcBtn" aria-label="Computador — clique para simular um soft error">
+              <span class="pc-screen" id="pcScreen">
+                <span class="pc-topbar mono"><span class="pc-led" id="pcLed"></span>MEMÓRIA RAM · SEM ECC</span>
+                <span class="pc-balance mono">SALDO<strong id="pcBalance">R$ 105,00</strong></span>
+                <span class="pc-status" id="pcStatus">Sistema estável. Clique aqui para ver o que 1 bit invertido pode causar.</span>
+              </span>
+              <span class="pc-base"></span>
+              <span class="pc-foot"></span>
+            </button>
           </div>
-          <p class="bitflip-msg" id="bitflipMsg">Memória íntegra. Valor armazenado: <strong id="byteValue"></strong></p>
+
+          <p class="cases-title mono">CASOS REAIS DOCUMENTADOS</p>
+          <div class="cases-grid">
+            <div class="case-card">
+              <div class="case-icon">🗳️</div>
+              <h5>Bélgica, 2003</h5>
+              <p>Uma urna eletrônica registrou <strong>4.096 votos a mais</strong> para uma candidata.
+              A explicação oficial: um único bit invertido — 4.096 é exatamente 2¹². Provável raio cósmico.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-icon">✈️</div>
+              <h5>Voo QF72, 2008</h5>
+              <p>O computador de um Airbus A330 recebeu dados corrompidos e o avião <strong>mergulhou duas
+              vezes</strong> sozinho, ferindo dezenas. A investigação considerou um soft error como possível causa.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-icon">🎮</div>
+              <h5>Super Mario 64, 2013</h5>
+              <p>Durante uma transmissão, Mario <strong>teleportou para cima</strong> — algo impossível no jogo.
+              A única explicação reproduzível: 1 bit da altitude invertido, atribuído a uma partícula cósmica.</p>
+            </div>
+          </div>
         </div>
       </div>
 

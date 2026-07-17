@@ -47,10 +47,16 @@ python3 -m http.server 8000
 ## Interativos
 
 - Simulador de **reação em cadeia** com barras de controle (canvas)
-- Simulador de **meia-vida** com curva exponencial teórica
+- Simulador de **meia-vida quantitativo** (feito para usar em aula): escolha o isótopo
+  (U-238, U-235, C-14, I-131, Tc-99m ou personalizado), a massa inicial em gramas e a
+  meia-vida com unidade — cada passo mostra tempo decorrido real e massa restante exata
+  (m₀ ÷ 2ⁿ), com gráfico em gramas e curva teórica
+- Demo de **soft error para leigos**: os 8 bits guardam um saldo bancário (pesos 128…1);
+  clique no computador e veja o estrago de 1 bit invertido — saldo alterado, arquivo
+  corrompido, tela azul — mais 3 casos reais documentados (urna belga de 2003,
+  voo QF72, Mario 64) e a correção por ECC
 - Comparadores de **densidade** e de **energia por pastilha**
-- **Ciclo do combustível** clicável, demo de **soft error** com ECC (caso Intel 1978)
-- Flip cards de curiosidades e **quiz** com 8 perguntas
+- **Ciclo do combustível** clicável, flip cards de curiosidades e **quiz** com 8 perguntas
 
 ## Estrutura
 

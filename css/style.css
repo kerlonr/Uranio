@@ -933,6 +933,73 @@ input[type="range"]::-moz-range-thumb {
 .sim-stat span { font-size: 0.7rem; color: var(--text-dim); }
 
 /* ---------- meia-vida ---------- */
+.hl-controls {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 1.4rem 0 1.2rem;
+}
+.hl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+.hl-field > .mono {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+}
+.hl-time { display: flex; gap: 8px; }
+.hl-time input { width: 40%; min-width: 90px; }
+.hl-time select { flex: 1; }
+.hl-controls input[type="number"],
+.hl-controls select {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.hl-controls input[type="number"]:focus,
+.hl-controls select:focus { border-color: var(--green); }
+.hl-controls select { cursor: pointer; }
+/* dentro do campo composto, o valor divide espaço com a unidade
+   (precisa vir depois da regra genérica de width: 100%) */
+.hl-controls .hl-time input[type="number"] { width: 42%; min-width: 88px; }
+.hl-controls .hl-time select { width: auto; flex: 1; min-width: 120px; }
+
+.hl-readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.4rem;
+}
+.hl-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.hl-stat strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.hl-stat span { font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+
 .halflife-wrap {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1114,9 +1181,144 @@ input[type="range"]::-moz-range-thumb {
 
 /* ---------- demo bit flip ---------- */
 .bitflip-demo { margin: 2.2rem 0 0; background: var(--surface-2); }
+.bitflip-wrap {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 30px;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+.bit-weights {
+  display: flex;
+  gap: 10px;
+  margin: -0.9rem 0 1.4rem;
+}
+.bit-weights span {
+  width: 46px;
+  text-align: center;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+}
+
+/* o computador */
+.pc {
+  background: none;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: inherit;
+  transition: transform 0.2s;
+}
+.pc:hover { transform: translateY(-3px); }
+.pc-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  min-height: 170px;
+  background: #060a08;
+  border: 2px solid #2c3b33;
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 0 26px rgba(63, 220, 140, 0.05);
+}
+.pc-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 3px);
+}
+.pc-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  border-bottom: 1px solid #1c2b24;
+  padding-bottom: 8px;
+}
+.pc-led {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.pc.error .pc-led { background: #ff5f4e; box-shadow: 0 0 10px #ff5f4e; }
+.pc-balance {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+}
+.pc-balance strong {
+  font-size: 1.5rem;
+  color: var(--green);
+  letter-spacing: 0;
+  transition: color 0.3s;
+}
+.pc.error .pc-balance strong { color: var(--orange); }
+.pc-status {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.pc-status strong { color: var(--text); }
+.pc-base {
+  width: 54px; height: 20px;
+  background: linear-gradient(180deg, #2c3b33, #18231d);
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+}
+.pc-foot {
+  width: 110px; height: 7px;
+  border-radius: 99px;
+  background: #2c3b33;
+}
+.pc.glitch .pc-screen { animation: pcGlitch 0.5s steps(2, jump-none); }
+@keyframes pcGlitch {
+  0% { transform: translate(2px, -2px); filter: hue-rotate(80deg) contrast(1.6); }
+  25% { transform: translate(-3px, 1px); filter: invert(0.15) saturate(2); }
+  50% { transform: translate(2px, 2px) skewX(-3deg); filter: hue-rotate(-60deg); }
+  75% { transform: translate(-1px, -1px); filter: contrast(1.4); }
+  100% { transform: none; filter: none; }
+}
+
+/* casos reais */
+.cases-title {
+  margin: 2rem 0 0.9rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+}
+.cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.case-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+}
+.case-icon { font-size: 1.4rem; margin-bottom: 6px; }
+.case-card h5 { font-family: var(--font-display); font-size: 0.98rem; margin-bottom: 5px; }
+.case-card p { margin: 0; font-size: 0.82rem; color: var(--text-dim); }
+.case-card strong { color: var(--text); }
+
 .bits { display: flex; gap: 10px; margin: 1.3rem 0 1.5rem; flex-wrap: wrap; }
 .bit {
-  width: 52px; height: 62px;
+  width: 46px; height: 58px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1452,6 +1654,11 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   .cinema-caption p { font-size: 0.95rem; }
 
   .halflife-wrap { grid-template-columns: 1fr; }
+  .bitflip-wrap { grid-template-columns: 1fr; }
+  .bits { gap: 6px; }
+  .bit { width: 36px; height: 46px; font-size: 1.1rem; }
+  .bit-weights { gap: 6px; }
+  .bit-weights span { width: 36px; }
   .pros-cons { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; gap: 32px; }
   .cycle { grid-template-columns: repeat(4, 1fr); }

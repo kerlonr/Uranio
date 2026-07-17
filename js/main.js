@@ -330,55 +330,129 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
 })();
 
 // ============================================================
-// SIMULADOR DE MEIA-VIDA
+// SIMULADOR DE MEIA-VIDA (quantitativo: massa real + tempo real)
 // ============================================================
 (() => {
   const TOTAL = 128;
+  const MAX_STEPS = 10;
   const grid = document.getElementById('atomsGrid');
   const chart = document.getElementById('halflifeChart');
   const cctx = chart.getContext('2d');
-  const atomsLeftEl = document.getElementById('atomsLeft');
+
+  const massEl = document.getElementById('hlMass');
+  const timeEl = document.getElementById('hlTime');
+  const unitEl = document.getElementById('hlUnit');
+  const presetEl = document.getElementById('hlPreset');
+  const stepsEl = document.getElementById('hlSteps');
+  const elapsedEl = document.getElementById('hlElapsed');
+  const leftEl = document.getElementById('hlLeft');
+  const pctEl = document.getElementById('hlPct');
+
+  const YEAR = 3.156e7; // segundos
+  const UNITS = { s: 1, min: 60, h: 3600, d: 86400, a: YEAR, Ma: 1e6 * YEAR, Ga: 1e9 * YEAR };
+
+  // meias-vidas reais
+  const PRESETS = {
+    u238:  { time: 4.47, unit: 'Ga' },
+    u235:  { time: 704,  unit: 'Ma' },
+    c14:   { time: 5730, unit: 'a' },
+    i131:  { time: 8.02, unit: 'd' },
+    tc99m: { time: 6.01, unit: 'h' },
+  };
 
   let atoms = [];
-  let history = [];
+  let steps = 0;
+  let m0 = 100;          // massa inicial (g)
+  let halfLifeS = PRESETS.u238.time * UNITS.Ga; // meia-vida em segundos
+
+  const fmtNum = (v, dec = 2) =>
+    v.toLocaleString('pt-BR', { maximumFractionDigits: dec });
+
+  function fmtMass(g) {
+    if (g >= 1000) return fmtNum(g / 1000) + ' kg';
+    if (g >= 1) return fmtNum(g) + ' g';
+    if (g >= 0.001) return fmtNum(g * 1000) + ' mg';
+    if (g >= 0.000001) return fmtNum(g * 1e6) + ' µg';
+    return fmtNum(g * 1e9) + ' ng';
+  }
+
+  function fmtTime(s) {
+    if (s === 0) return '0';
+    const scales = [
+      [1e9 * YEAR, 'bilhões de anos', 'bilhão de anos'],
+      [1e6 * YEAR, 'milhões de anos', 'milhão de anos'],
+      [1e3 * YEAR, 'mil anos', 'mil anos'],
+      [YEAR, 'anos', 'ano'],
+      [86400, 'dias', 'dia'],
+      [3600, 'horas', 'hora'],
+      [60, 'min', 'min'],
+      [1, 's', 's'],
+    ];
+    for (const [f, plural, singular] of scales) {
+      if (s >= f) {
+        const v = s / f;
+        const shown = fmtNum(v);
+        return shown + ' ' + (shown === '1' ? singular : plural);
+      }
+    }
+    return fmtNum(s) + ' s';
+  }
+
+  function readInputs() {
+    m0 = Math.max(parseFloat(massEl.value) || 0, 0) || 100;
+    const t = Math.max(parseFloat(timeEl.value) || 0, 0) || 1;
+    halfLifeS = t * (UNITS[unitEl.value] || 1);
+  }
+
+  const massAt = (n) => m0 / Math.pow(2, n);
+
+  function updateReadout() {
+    stepsEl.textContent = steps;
+    elapsedEl.textContent = fmtTime(steps * halfLifeS);
+    leftEl.textContent = fmtMass(massAt(steps));
+    pctEl.textContent = fmtNum(100 / Math.pow(2, steps), steps > 6 ? 3 : 2) + '%';
+  }
 
   function build() {
+    readInputs();
     grid.innerHTML = '';
     atoms = [];
     for (let i = 0; i < TOTAL; i++) {
       const d = document.createElement('div');
       d.className = 'atom-dot';
       grid.appendChild(d);
-      atoms.push({ el: d, alive: true });
+      atoms.push(d);
     }
-    history = [TOTAL];
-    atomsLeftEl.textContent = TOTAL;
+    steps = 0;
+    updateReadout();
     drawChart();
   }
 
   function decayStep() {
+    if (steps >= MAX_STEPS) return;
     if (window.SFX) SFX.play('tick');
-    let alive = 0;
-    atoms.forEach((a) => {
-      if (!a.alive) return;
-      if (Math.random() < 0.5) {
-        a.alive = false;
-        a.el.classList.add('decayed');
-      } else {
-        alive++;
-      }
-    });
-    history.push(alive);
-    atomsLeftEl.textContent = alive;
+    steps++;
+    // exatamente metade dos vivos decai (sorteando quais): o modelo visual
+    // bate com a matemática; a nota do card explica a estatística real
+    const aliveIdx = atoms.map((el, i) => (el.classList.contains('decayed') ? -1 : i)).filter((i) => i >= 0);
+    const target = Math.floor(TOTAL / Math.pow(2, steps));
+    let toDecay = aliveIdx.length - target;
+    while (toDecay > 0 && aliveIdx.length) {
+      const k = Math.floor(Math.random() * aliveIdx.length);
+      atoms[aliveIdx[k]].classList.add('decayed');
+      aliveIdx.splice(k, 1);
+      toDecay--;
+    }
+    updateReadout();
     drawChart();
   }
 
   function drawChart() {
     const W = chart.width, H = chart.height;
-    const pad = { l: 40, r: 12, t: 16, b: 30 };
+    const pad = { l: 58, r: 12, t: 16, b: 30 };
     cctx.clearRect(0, 0, W, H);
 
-    const n = Math.max(history.length, 8);
+    const n = Math.max(steps + 1, 8);
     const plotW = W - pad.l - pad.r;
     const plotH = H - pad.t - pad.b;
 
@@ -390,12 +464,13 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
     cctx.lineTo(W - pad.r, H - pad.b);
     cctx.stroke();
 
-    cctx.fillStyle = 'rgba(154,179,165,0.7)';
+    // linhas de grade em frações da massa inicial
     cctx.font = '10px system-ui, sans-serif';
-    cctx.textAlign = 'right';
-    [0, 32, 64, 96, 128].forEach((v) => {
-      const y = H - pad.b - (v / TOTAL) * plotH;
-      cctx.fillText(v, pad.l - 6, y + 3);
+    [1, 0.5, 0.25, 0].forEach((f) => {
+      const y = H - pad.b - f * plotH;
+      cctx.fillStyle = 'rgba(154,179,165,0.7)';
+      cctx.textAlign = 'right';
+      cctx.fillText(f === 0 ? '0' : fmtMass(m0 * f), pad.l - 6, y + 3);
       cctx.strokeStyle = 'rgba(154,179,165,0.1)';
       cctx.beginPath();
       cctx.moveTo(pad.l, y);
@@ -403,25 +478,24 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
       cctx.stroke();
     });
 
-    // curva teórica N = N0 · (1/2)^t
+    // curva teórica m = m0 · (1/2)^(t/T½)
     cctx.strokeStyle = 'rgba(255,157,71,0.5)';
     cctx.setLineDash([4, 4]);
     cctx.beginPath();
     for (let px = 0; px <= plotW; px++) {
       const t = (px / plotW) * (n - 1);
-      const v = TOTAL * Math.pow(0.5, t);
-      const x = pad.l + px;
-      const y = H - pad.b - (v / TOTAL) * plotH;
-      px === 0 ? cctx.moveTo(x, y) : cctx.lineTo(x, y);
+      const y = H - pad.b - Math.pow(0.5, t) * plotH;
+      px === 0 ? cctx.moveTo(pad.l + px, y) : cctx.lineTo(pad.l + px, y);
     }
     cctx.stroke();
     cctx.setLineDash([]);
 
-    // barras medidas
+    // barras: massa exata em cada meia-vida já percorrida
     const barW = Math.min(plotW / n * 0.55, 34);
-    history.forEach((v, i) => {
+    for (let i = 0; i <= steps; i++) {
+      const frac = 1 / Math.pow(2, i);
       const x = pad.l + (i / (n - 1)) * plotW - barW / 2;
-      const h = (v / TOTAL) * plotH;
+      const h = Math.max(frac * plotH, 1.5);
       const grad = cctx.createLinearGradient(0, H - pad.b - h, 0, H - pad.b);
       grad.addColorStop(0, '#3fdc8c');
       grad.addColorStop(1, '#1b7a43');
@@ -431,8 +505,8 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
       cctx.fill();
       cctx.fillStyle = 'rgba(230,239,233,0.85)';
       cctx.textAlign = 'center';
-      cctx.fillText(v, Math.max(x, pad.l) + barW / 2, H - pad.b - h - 5);
-    });
+      cctx.fillText(fmtMass(massAt(i)), Math.max(x, pad.l) + barW / 2, H - pad.b - h - 5);
+    }
 
     cctx.fillStyle = 'rgba(154,179,165,0.7)';
     cctx.textAlign = 'center';
@@ -440,6 +514,21 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
     cctx.textAlign = 'left';
     cctx.fillStyle = 'rgba(255,157,71,0.8)';
     cctx.fillText('- - curva teórica', W - 105, pad.t + 4);
+  }
+
+  presetEl.addEventListener('change', () => {
+    const p = PRESETS[presetEl.value];
+    if (p) {
+      timeEl.value = p.time;
+      unitEl.value = p.unit;
+    }
+    build();
+  });
+  [massEl, timeEl].forEach((el) => el.addEventListener('input', () => { presetElCustom(el); build(); }));
+  unitEl.addEventListener('change', () => { presetEl.value = 'custom'; build(); });
+  function presetElCustom(el) {
+    // editar a meia-vida manualmente vira "personalizado"; massa não muda o isótopo
+    if (el === timeEl) presetEl.value = 'custom';
   }
 
   document.getElementById('decayStep').addEventListener('click', decayStep);
@@ -482,12 +571,43 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
 // ---------- Demo de bit flip (soft error) ----------
 (() => {
   const row = document.getElementById('bitsRow');
+  const weightsRow = document.getElementById('bitWeights');
   const msg = document.getElementById('bitflipMsg');
   const byteEl = document.getElementById('byteValue');
-  const original = [0, 1, 1, 0, 1, 0, 0, 1];
-  let bits = [];
+  const pc = document.getElementById('pcBtn');
+  const pcBalance = document.getElementById('pcBalance');
+  const pcStatus = document.getElementById('pcStatus');
 
-  function render() {
+  const WEIGHTS = [128, 64, 32, 16, 8, 4, 2, 1];
+  const original = [0, 1, 1, 0, 1, 0, 0, 1]; // 01101001 = 105
+  let bits = [...original];
+  let caseIdx = 0;
+
+  weightsRow.innerHTML = WEIGHTS.map((w) => `<span>${w}</span>`).join('');
+
+  const toValue = (arr) => arr.reduce((acc, b, i) => acc + b * WEIGHTS[i], 0);
+  const money = (v) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+  // consequências realistas de 1 bit invertido (recebem o contexto do flip)
+  const consequences = [
+    (oldV, newV, w) =>
+      `💰 O saldo mudou de <strong>${money(oldV)}</strong> para <strong>${money(newV)}</strong> ` +
+      `sem nenhuma transação — o bit que vale <strong>${w}</strong> virou sozinho.`,
+    () =>
+      `💾 Arquivo corrompido: <strong>trabalho_quimica.docx</strong> não abre mais. ` +
+      `Um bit errado no cabeçalho e o programa não reconhece o arquivo.`,
+    () =>
+      `🟦 Tela azul: <strong>MEMORY_MANAGEMENT</strong>. O bit invertido virou um endereço ` +
+      `de memória que não existe — e o sistema inteiro travou.`,
+    () =>
+      `🖼️ Um pixel da sua foto mudou de cor para sempre. É o dano mais inofensivo — ` +
+      `e o mais comum — de um soft error.`,
+    () =>
+      `🗳️ Foi exatamente isso na Bélgica em 2003: o bit que vale 4.096 virou, ` +
+      `e uma candidata "ganhou" 4.096 votos (veja os casos reais abaixo).`,
+  ];
+
+  function renderBits() {
     row.innerHTML = '';
     bits.forEach((b, i) => {
       const d = document.createElement('div');
@@ -495,29 +615,60 @@ document.getElementById('densityButtons').addEventListener('click', (e) => {
       d.textContent = b;
       row.appendChild(d);
     });
-    const flipped = bits.some((b, i) => b !== original[i]);
-    byteEl.textContent = bits.join('');
-    msg.classList.toggle('error', flipped);
-    msg.innerHTML = flipped
-      ? '⚠️ <em>Soft error!</em> Um bit foi invertido pela partícula alfa — o valor armazenado mudou: <strong>' + bits.join('') + '</strong>'
-      : 'Memória íntegra. Valor armazenado: <strong>' + bits.join('') + '</strong>';
+    byteEl.textContent = bits.join('') + ' (' + toValue(bits) + ')';
   }
 
-  document.getElementById('alphaBtn').addEventListener('click', () => {
-    if (window.SFX) SFX.play('alpha');
+  function flipBit() {
     const i = Math.floor(Math.random() * 8);
+    const oldV = toValue(bits);
     bits[i] = bits[i] === 0 ? 1 : 0;
-    render();
-  });
+    const newV = toValue(bits);
+    return { oldV, newV, w: WEIGHTS[i] };
+  }
+
+  function showError({ oldV, newV, w }) {
+    renderBits();
+    const flipped = bits.some((b, i) => b !== original[i]);
+
+    msg.classList.toggle('error', flipped);
+    msg.innerHTML = flipped
+      ? '⚠️ <em>Soft error!</em> Byte agora: <strong>' + bits.join('') + ' (' + newV + ')</strong>'
+      : 'Memória íntegra. Byte armazenado: <strong>' + bits.join('') + ' (' + newV + ')</strong>';
+
+    pcBalance.textContent = money(newV);
+    pc.classList.toggle('error', flipped);
+    pc.classList.remove('glitch');
+    void pc.offsetWidth; // reinicia a animação de glitch
+    pc.classList.add('glitch');
+
+    // cicla as consequências para mostrar variedade a cada clique
+    const fn = consequences[caseIdx % consequences.length];
+    caseIdx++;
+    pcStatus.innerHTML = fn(oldV, newV, w);
+  }
+
+  function strike() {
+    if (window.SFX) SFX.play('alpha');
+    showError(flipBit());
+  }
+
+  document.getElementById('alphaBtn').addEventListener('click', strike);
+  pc.addEventListener('click', strike);
+
   document.getElementById('eccBtn').addEventListener('click', () => {
     if (window.SFX) SFX.play('good');
     bits = [...original];
-    render();
-    msg.innerHTML = '🛡️ A memória <strong>ECC</strong> detectou e corrigiu o erro automaticamente — exatamente o que os servidores fazem desde o caso Intel.';
+    renderBits();
+    msg.classList.remove('error');
+    msg.innerHTML = '🛡️ A memória <strong>ECC</strong> detectou e corrigiu o erro automaticamente.';
+    pc.classList.remove('error', 'glitch');
+    pcBalance.textContent = money(toValue(bits));
+    pcStatus.innerHTML = '🛡️ <strong>ECC em ação:</strong> o erro foi detectado e corrigido antes de causar ' +
+      'qualquer dano — saldo restaurado. É por isso que todo servidor e data center usa memória ECC desde o caso Intel.';
   });
 
-  bits = [...original];
-  render();
+  renderBits();
+  pcBalance.textContent = money(toValue(bits));
 })();
 
 // ---------- Flip cards ----------
